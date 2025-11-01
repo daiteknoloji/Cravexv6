@@ -62,17 +62,40 @@ foreach ($room in $rooms) {
     Write-Host "  Oda: $roomName" -NoNewline
     
     try {
-        Invoke-RestMethod -Uri "http://localhost:8008/_matrix/client/r0/rooms/${roomId}/join" `
-                          -Method Post `
-                          -Headers $headers `
-                          -Body "{}" `
-                          -ContentType "application/json" `
-                          -ErrorAction Stop | Out-Null
-        
-        Write-Host " - EKLENDI" -ForegroundColor Green
-        $successCount++
+        # Önce normal join dene
+        try {
+            Invoke-RestMethod -Uri "http://localhost:8008/_matrix/client/r0/rooms/${roomId}/join" `
+                              -Method Post `
+                              -Headers $headers `
+                              -Body "{}" `
+                              -ContentType "application/json" `
+                              -ErrorAction Stop | Out-Null
+            
+            Write-Host " - EKLENDI" -ForegroundColor Green
+            $successCount++
+        } catch {
+            # Normal join olmadı, Admin API ile force join dene
+            # user_id JSON body'de (query param değil!)
+            $joinBody = @{ user_id = "@admin:localhost" } | ConvertTo-Json
+            $forceUrl = "http://localhost:8008/_synapse/admin/v1/join/${roomId}"
+            
+            try {
+                Invoke-RestMethod -Uri $forceUrl `
+                                  -Method Post `
+                                  -Headers $headers `
+                                  -Body $joinBody `
+                                  -ContentType "application/json" `
+                                  -ErrorAction Stop | Out-Null
+                
+                Write-Host " - ZORLA EKLENDI" -ForegroundColor Yellow
+                $successCount++
+            } catch {
+                # Force join de olmadı, kullanıcıdan davet gerekli
+                throw $_
+            }
+        }
     } catch {
-        if ($_.Exception.Message -like "*already*" -or $_.Exception.Message -like "*M_FORBIDDEN*") {
+        if ($_.Exception.Message -like "*already*") {
             Write-Host " - ZATEN UYESI" -ForegroundColor Gray
             $alreadyJoinedCount++
         } else {

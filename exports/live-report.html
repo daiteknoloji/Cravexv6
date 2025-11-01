@@ -1,0 +1,189 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="refresh" content="30">
+    <title>Matrix CanlÄ± Mesaj Raporu</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .header h1 { color: #333; margin-bottom: 10px; }
+        .live-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background: #4CAF50;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+            margin-right: 10px;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .stat-card h3 { color: #666; font-size: 14px; margin-bottom: 10px; }
+        .stat-card .value { font-size: 32px; font-weight: bold; color: #667eea; }
+        .messages-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        thead { background: #667eea; color: white; }
+        th { padding: 12px; text-align: left; }
+        td { padding: 12px; border-bottom: 1px solid #f0f0f0; }
+        tr:hover { background: #f8f9fa; }
+        .sender { color: #2196F3; font-weight: bold; }
+        .timestamp { color: #999; font-size: 12px; }
+        .room-name { color: #FF9800; }
+        .update-time { color: #4CAF50; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                <span class="live-indicator"></span>
+                ğŸ“Š Matrix CanlÄ± Mesaj Raporu
+            </h1>
+            <p>Otomatik gÃ¼ncelleme: Her 30 saniyede | Son gÃ¼ncelleme: <span class="update-time">01.11.2025 22:16:07</span></p>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <h3>Toplam Mesaj</h3>
+                <div class="value">15</div>
+            </div>
+            <div class="stat-card">
+                <h3>Benzersiz KullanÄ±cÄ±</h3>
+                <div class="value">3</div>
+            </div>
+            <div class="stat-card">
+                <h3>Benzersiz Oda</h3>
+                <div class="value">6</div>
+            </div>
+            <div class="stat-card">
+                <h3>GÃ¼ncelleme</h3>
+                <div class="value" style="font-size: 18px;">#4</div>
+            </div>
+        </div>
+        
+        <div class="messages-container">
+            <h2>ğŸ’¬ Mesajlar (Son 100)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tarih/Saat</th>
+                        <th>GÃ¶nderen</th>
+                        <th>Oda</th>
+                        <th>Mesaj</th>
+                    </tr>
+                </thead>
+                <tbody>                    <tr>
+                        <td class="timestamp">2025-11-01 19:15:14+00</td>
+                        <td class="sender">@1k:localhost</td>
+                        <td class="room-name">test11</td>
+                        <td>deneme12</td>
+                    </tr>                    <tr>
+                        <td class="timestamp">2025-11-01 19:14:11+00</td>
+                        <td class="sender">@2k:localhost</td>
+                        <td class="room-name">test11</td>
+                        <td>222222222222222</td>
+                    </tr>                    <tr>
+                        <td class="timestamp">2025-11-01 19:14:07+00</td>
+                        <td class="sender">@1k:localhost</td>
+                        <td class="room-name">test11</td>
+                        <td>111111111111111111111</td>
+                    </tr>                    <tr>
+                        <td class="timestamp">2025-11-01 18:57:58+00</td>
+                        <td class="sender">@2k:localhost</td>
+                        <td class="room-name">11717</td>
+                        <td>1323123</td>
+                    </tr>                    <tr>
+                        <td class="timestamp">2025-11-01 18:43:00+00</td>
+                        <td class="sender">@2k:localhost</td>
+                        <td class="room-name">5555</td>
+                        <td>12312312</td>
+                    </tr>                    <tr>
+                        <td class="timestamp">2025-11-01 18:39:09+00</td>
+                        <td class="sender">@1k:localhost</td>
+                        <td class="room-name">16161616</td>
+                        <td>213123132</td>
+                    </tr>                    <tr>
+                        <td class="timestamp">2025-11-01 18:07:40+00</td>
+                        <td class="sender">@2k:localhost</td>
+                        <td class="room-name">test11</td>
+                        <td>123333333333333</td>
+                    </tr>                    <tr>
+                        <td class="timestamp">2025-10-31 19:17:34+00</td>
+                        <td class="sender">@2k:localhost</td>
+                        <td class="room-name">s─▒fre</td>
+                        <td>1111,</td>
+                    </tr>                    <tr>
+                        <td class="timestamp">2025-10-31 19:15:52+00</td>
+                        <td class="sender">@2k:localhost</td>
+                        <td class="room-name">s─▒fre</td>
+                        <td>ssssssss</td>
+                    </tr>                    <tr>
+                        <td class="timestamp">2025-10-31 19:15:48+00</td>
+                        <td class="sender">@2k:localhost</td>
+                        <td class="room-name">2ss</td>
+                        <td>123132</td>
+                    </tr>                    <tr>
+                        <td class="timestamp">2025-10-31 19:14:02+00</td>
+                        <td class="sender">@admin:localhost</td>
+                        <td class="room-name">2ss</td>
+                        <td>asssss</td>
+                    </tr>                    <tr>
+                        <td class="timestamp">2025-10-31 19:06:21+00</td>
+                        <td class="sender">@2k:localhost</td>
+                        <td class="room-name">2ss</td>
+                        <td>asdddddddddd</td>
+                    </tr>                    <tr>
+                        <td class="timestamp">2025-10-31 19:06:17+00</td>
+                        <td class="sender">@admin:localhost</td>
+                        <td class="room-name">2ss</td>
+                        <td>1111111111111111111111</td>
+                    </tr>                    <tr>
+                        <td class="timestamp">2025-10-31 18:37:56+00</td>
+                        <td class="sender">@2k:localhost</td>
+                        <td class="room-name">s─▒fre</td>
+                        <td>asdasd</td>
+                    </tr>                    <tr>
+                        <td class="timestamp">2025-10-31 18:37:54+00</td>
+                        <td class="sender">@2k:localhost</td>
+                        <td class="room-name">s─▒fre</td>
+                        <td>asdasda</td>
+                    </tr>                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

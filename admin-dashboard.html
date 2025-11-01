@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matrix Admin Dashboard - Mesaj İzleme</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #666;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .stat-card h3 {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .filters {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .filters h2 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .filter-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .filter-group label {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        
+        .filter-group input,
+        .filter-group select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #45a049;
+        }
+        
+        .btn-warning {
+            background: #FF9800;
+            color: white;
+        }
+        
+        .btn-info {
+            background: #2196F3;
+            color: white;
+        }
+        
+        .messages-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .messages-container h2 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .message-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .message-table thead {
+            background: #667eea;
+            color: white;
+        }
+        
+        .message-table th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        .message-table td {
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .message-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .sender {
+            color: #2196F3;
+            font-weight: bold;
+        }
+        
+        .timestamp {
+            color: #999;
+            font-size: 12px;
+        }
+        
+        .room-name {
+            color: #FF9800;
+            font-weight: 500;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-info {
+            background: #e3f2fd;
+            color: #1976d2;
+            border-left: 4px solid #2196F3;
+        }
+        
+        .alert-warning {
+            background: #fff3e0;
+            color: #f57c00;
+            border-left: 4px solid #FF9800;
+        }
+        
+        .search-box {
+            padding: 12px;
+            border: 2px solid #667eea;
+            border-radius: 5px;
+            width: 100%;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 60px;
+            color: #999;
+        }
+        
+        .export-info {
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            border-left: 4px solid #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>📊 Matrix Admin Dashboard</h1>
+            <p>Tüm mesajları görüntüleyin, filtreleyin ve export edin</p>
+        </div>
+        
+        <!-- Alert -->
+        <div class="alert alert-info">
+            <strong>ℹ️ Bilgi:</strong> Bu panel veritabanından direkt okur. Admin odaya üye olmasa bile tüm mesajları görebilir!
+        </div>
+        
+        <!-- Stats -->
+        <div class="stats">
+            <div class="stat-card">
+                <h3>Toplam Mesaj</h3>
+                <div class="value" id="totalMessages">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Toplam Oda</h3>
+                <div class="value" id="totalRooms">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Aktif Kullanıcı</h3>
+                <div class="value" id="totalUsers">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Son Mesaj</h3>
+                <div class="value" id="lastMessage" style="font-size: 14px;">-</div>
+            </div>
+        </div>
+        
+        <!-- Filters -->
+        <div class="filters">
+            <h2>🔍 Filtreler</h2>
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label>Oda ID</label>
+                    <input type="text" id="filterRoomId" placeholder="!abc123:localhost">
+                </div>
+                <div class="filter-group">
+                    <label>Kullanıcı</label>
+                    <input type="text" id="filterSender" placeholder="@1k:localhost">
+                </div>
+                <div class="filter-group">
+                    <label>Başlangıç Tarihi</label>
+                    <input type="date" id="filterStartDate">
+                </div>
+                <div class="filter-group">
+                    <label>Bitiş Tarihi</label>
+                    <input type="date" id="filterEndDate">
+                </div>
+            </div>
+            
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label>Kelime Ara</label>
+                    <input type="text" id="searchQuery" class="search-box" placeholder="Mesajlarda kelime ara...">
+                </div>
+            </div>
+            
+            <div class="actions">
+                <button class="btn-primary" onclick="loadMessages()">📊 Mesajları Yükle</button>
+                <button class="btn-success" onclick="exportJSON()">💾 JSON Export</button>
+                <button class="btn-success" onclick="exportCSV()">📄 CSV Export</button>
+                <button class="btn-info" onclick="exportHTML()">🌐 HTML Rapor</button>
+                <button class="btn-warning" onclick="clearFilters()">🔄 Filtreleri Temizle</button>
+            </div>
+        </div>
+        
+        <!-- Messages -->
+        <div class="messages-container">
+            <h2>💬 Mesajlar</h2>
+            <div id="messagesContent">
+                <div class="loading">
+                    <p>👆 Yukarıdaki "Mesajları Yükle" butonuna tıklayın</p>
+                    <p style="margin-top: 10px; color: #ccc;">Veya export scriptlerini kullanın:</p>
+                    <code style="background: #f5f5f5; padding: 5px 10px; border-radius: 3px; display: inline-block; margin-top: 10px;">
+                        .\EXPORT-MESSAGES.ps1 -Format all
+                    </code>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Export Info -->
+        <div class="export-info">
+            <h3>📦 PowerShell Export Komutları:</h3>
+            <pre style="background: white; padding: 15px; border-radius: 5px; margin-top: 10px; overflow-x: auto;">
+# Tüm formatları export et
+.\EXPORT-MESSAGES.ps1 -Format all
+
+# Sadece JSON
+.\EXPORT-MESSAGES.ps1 -Format json
+
+# Sadece CSV
+.\EXPORT-MESSAGES.ps1 -Format csv
+
+# Belirli oda
+.\EXPORT-MESSAGES.ps1 -Format all -RoomId "!abc:localhost"
+
+# Tarih aralığı
+.\EXPORT-MESSAGES.ps1 -Format all -StartDate "2025-10-01" -EndDate "2025-11-01"
+
+# Belirli kullanıcı
+.\EXPORT-MESSAGES.ps1 -Format all -Sender "@1k:localhost"
+            </pre>
+        </div>
+    </div>
+    
+    <script>
+        let allMessages = [];
+        
+        async function loadMessages() {
+            const content = document.getElementById('messagesContent');
+            content.innerHTML = '<div class="loading">🔄 Mesajlar yükleniyor...</div>';
+            
+            // PowerShell scripti çalıştırması gerekiyor
+            // Bu statik HTML sayfası - backend yok
+            content.innerHTML = `
+                <div class="alert alert-warning">
+                    <strong>⚠️ Not:</strong> Bu statik bir HTML sayfasıdır.
+                    <br><br>
+                    <strong>Mesajları yüklemek için PowerShell scriptini kullanın:</strong>
+                    <pre style="background: white; padding: 10px; border-radius: 5px; margin-top: 10px;">.\EXPORT-MESSAGES.ps1 -Format html</pre>
+                    <br>
+                    Bu komut mesajları HTML olarak export edip tarayıcıda otomatik açacaktır.
+                </div>
+            `;
+        }
+        
+        function exportJSON() {
+            alert('PowerShell scriptini kullanın:\\n\\n.\\EXPORT-MESSAGES.ps1 -Format json');
+        }
+        
+        function exportCSV() {
+            alert('PowerShell scriptini kullanın:\\n\\n.\\EXPORT-MESSAGES.ps1 -Format csv');
+        }
+        
+        function exportHTML() {
+            alert('PowerShell scriptini kullanın:\\n\\n.\\EXPORT-MESSAGES.ps1 -Format html\\n\\nHTML raporu otomatik tarayıcıda açılacak!');
+        }
+        
+        function clearFilters() {
+            document.getElementById('filterRoomId').value = '';
+            document.getElementById('filterSender').value = '';
+            document.getElementById('filterStartDate').value = '';
+            document.getElementById('filterEndDate').value = '';
+            document.getElementById('searchQuery').value = '';
+        }
+        
+        // İstatistikleri yükle (örnek)
+        document.getElementById('totalMessages').textContent = '?';
+        document.getElementById('totalRooms').textContent = '?';
+        document.getElementById('totalUsers').textContent = '?';
+        document.getElementById('lastMessage').textContent = 'Script çalıştır';
+    </script>
+</body>
+</html>
+
