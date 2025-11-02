@@ -2,10 +2,10 @@
 # =========================================
 
 # Sunucu adı (domain veya localhost)
-server_name: "localhost"
+server_name: "cravexv5-production.up.railway.app"
 
 # Public baseurl
-public_baseurl: "http://localhost:8008/"
+public_baseurl: "https://cravexv5-production.up.railway.app/"
 
 # PID file
 pid_file: /data/homeserver.pid
