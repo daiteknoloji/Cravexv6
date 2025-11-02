@@ -31,13 +31,14 @@ listeners:
     resources:
       - names: [federation]
 
-# PostgreSQL Database
+# PostgreSQL Database - Railway uses environment variables
 database:
   name: psycopg2
+  txn_limit: 10000
   args:
-    user: synapse_user
-    password: SuperGucluSifre2024!
-    database: synapse
+    user: postgres
+    password: postgres
+    database: railway
     host: postgres
     port: 5432
     cp_min: 5
