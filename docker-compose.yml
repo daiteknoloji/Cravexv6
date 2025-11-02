@@ -1,91 +1,72 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Veritabanı
   postgres:
     image: postgres:15-alpine
-    container_name: matrix-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: synapse
       POSTGRES_USER: synapse_user
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme123}
-      POSTGRES_INITDB_ARGS: --encoding=UTF-8 --lc-collate=C --lc-ctype=C
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-SuperGucluSifre2024!}
+      POSTGRES_DB: synapse
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    networks:
-      - matrix-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U synapse_user -d synapse"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # Redis Cache
   redis:
     image: redis:7-alpine
-    container_name: matrix-redis
     restart: unless-stopped
-    networks:
-      - matrix-network
+    volumes:
+      - redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # Matrix Synapse Sunucusu
   synapse:
     image: matrixdotorg/synapse:latest
-    container_name: matrix-synapse
     restart: unless-stopped
     ports:
-      - "8008:8008"  # HTTP API
-      - "8448:8448"  # Federation (diğer Matrix sunucularıyla iletişim)
+      - "${PORT:-8008}:8008"
     environment:
-      SYNAPSE_SERVER_NAME: ${SYNAPSE_SERVER_NAME:-localhost}
+      SYNAPSE_SERVER_NAME: ${RAILWAY_PUBLIC_DOMAIN:-localhost}
       SYNAPSE_REPORT_STATS: "no"
-      POSTGRES_DB: synapse
-      POSTGRES_USER: synapse_user
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme123}
       POSTGRES_HOST: postgres
+      POSTGRES_USER: synapse_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-SuperGucluSifre2024!}
+      POSTGRES_DB: synapse
     volumes:
       - synapse_data:/data
-      - ./synapse-config/homeserver.yaml:/data/homeserver.yaml
-      - ./synapse-config/localhost.log.config:/data/localhost.log.config
-    networks:
-      - matrix-network
+      - ./synapse-config:/config:ro
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8008/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # Synapse Admin Panel (mevcut projenle entegre)
-  synapse-admin:
-    build:
-      context: ./www/admin
-    container_name: synapse-admin-ui
-    restart: unless-stopped
-    ports:
-      - "8082:80"
-    networks:
-      - matrix-network
-    depends_on:
-      - synapse
-
-networks:
-  matrix-network:
-    driver: bridge
+    command: >
+      sh -c "
+        if [ ! -f /data/homeserver.yaml ]; then
+          python -m synapse.app.homeserver \
+            --server-name=${RAILWAY_PUBLIC_DOMAIN:-localhost} \
+            --config-path=/data/homeserver.yaml \
+            --generate-config \
+            --report-stats=no;
+          
+          cat /config/homeserver.yaml > /data/homeserver.yaml;
+          sed -i 's/server_name: \"localhost\"/server_name: \"'${RAILWAY_PUBLIC_DOMAIN:-localhost}'\"/g' /data/homeserver.yaml;
+          sed -i 's|public_baseurl: \"http://localhost:8008/\"|public_baseurl: \"https://'${RAILWAY_PUBLIC_DOMAIN:-localhost}'/\"|g' /data/homeserver.yaml;
+          sed -i 's/host: postgres/host: postgres/g' /data/homeserver.yaml;
+          sed -i 's/host: redis/host: redis/g' /data/homeserver.yaml;
+          sed -i 's|web_client_location: \"http://localhost:8080\"|web_client_location: \"https://'${ELEMENT_WEB_URL:-localhost}'\"|g' /data/homeserver.yaml;
+        fi;
+        python -m synapse.app.homeserver -c /data/homeserver.yaml
+      "
 
 volumes:
   postgres_data:
-    driver: local
+  redis_data:
   synapse_data:
-    driver: local
-
