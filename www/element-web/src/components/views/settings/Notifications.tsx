@@ -30,7 +30,7 @@ import {
     VectorState,
     type VectorPushRuleDefinition,
 } from "../../../notifications";
-import { _t, type TranslatedString } from "../../../languageHandler";
+import { _t, type TranslatedString, getCurrentLanguage } from "../../../languageHandler";
 import LabelledToggleSwitch from "../elements/LabelledToggleSwitch";
 import SettingsStore from "../../../settings/SettingsStore";
 import StyledRadioButton from "../elements/StyledRadioButton";
@@ -52,6 +52,17 @@ import { SettingsSubsectionHeading } from "./shared/SettingsSubsectionHeading";
 import { SettingsSubsection } from "./shared/SettingsSubsection";
 import { doesRoomHaveUnreadMessages } from "../../../Unread";
 import SettingsFlag from "../elements/SettingsFlag";
+
+const isEncryptionUiDisabled = (): boolean => {
+    const config = SdkConfig.get();
+
+    return (
+        Boolean(config.force_disable_encryption) ||
+        Boolean(config.disable_encryption) ||
+        Boolean(config.disable_advanced_encryption_ui) ||
+        Boolean(config.customisations?.disable_encryption_ui)
+    );
+};
 
 // TODO: this "view" component still has far too much application logic in it,
 // which should be factored out to other files.
@@ -97,7 +108,10 @@ const RULE_DISPLAY_ORDER: string[] = [
     RuleId.IncomingCall,
     RuleId.SuppressNotices,
     RuleId.Tombstone,
-];
+].filter(
+    (ruleId) =>
+        !isEncryptionUiDisabled() || (ruleId !== RuleId.EncryptedDM && ruleId !== RuleId.EncryptedMessage),
+);
 
 interface IVectorPushRule {
     ruleId: RuleId | typeof KEYWORD_RULE_ID | string;
@@ -206,9 +220,12 @@ const NotificationActivitySettings = (): JSX.Element => {
  */
 export default class Notifications extends React.PureComponent<EmptyObject, IState> {
     private settingWatchers: string[] = [];
+    private readonly encryptionUiDisabled: boolean;
 
     public constructor(props: EmptyObject) {
         super(props);
+
+        this.encryptionUiDisabled = isEncryptionUiDisabled();
 
         this.state = {
             phase: Phase.Loading,
@@ -360,6 +377,10 @@ export default class Notifications extends React.PureComponent<EmptyObject, ISta
         for (const category of vectorCategories) {
             preparedNewState.vectorPushRules[category] = [];
             for (const rule of defaultRules[category]) {
+                if (this.encryptionUiDisabled && rule.rule_id?.includes("encrypted")) {
+                    continue;
+                }
+
                 const definition: VectorPushRuleDefinition = VectorPushRulesDefinitions[rule.rule_id];
                 const vectorState = definition.ruleToVectorState(rule)!;
                 preparedNewState.vectorPushRules[category]!.push({
@@ -754,10 +775,11 @@ export default class Notifications extends React.PureComponent<EmptyObject, ISta
             );
         }
 
+        const isTurkish = getCurrentLanguage().toLowerCase().startsWith("tr");
         const VectorStateToLabel = {
-            [VectorState.On]: _t("common|on"),
-            [VectorState.Off]: _t("common|off"),
-            [VectorState.Loud]: _t("settings|notifications|noisy"),
+            [VectorState.On]: isTurkish ? "Sessiz" : "Silent",
+            [VectorState.Off]: isTurkish ? "Kapali" : "Off",
+            [VectorState.Loud]: isTurkish ? "Sesli" : "Loud",
         };
 
         const makeRadio = (r: IVectorPushRule, s: VectorState): JSX.Element => (
@@ -880,3 +902,4 @@ export default class Notifications extends React.PureComponent<EmptyObject, ISta
         );
     }
 }
+

@@ -26,12 +26,14 @@ import InlineSpinner from "../../../elements/InlineSpinner";
 import { PosthogAnalytics } from "../../../../../PosthogAnalytics";
 import { showDialog as showAnalyticsLearnMoreDialog } from "../../../dialogs/AnalyticsLearnMoreDialog";
 import { privateShouldBeEncrypted } from "../../../../../utils/rooms";
+import { shouldForceDisableEncryption } from "../../../../../utils/crypto/shouldForceDisableEncryption";
 import SettingsTab from "../SettingsTab";
 import { SettingsSection } from "../../shared/SettingsSection";
 import { SettingsSubsection, SettingsSubsectionText } from "../../shared/SettingsSubsection";
 import { useOwnDevices } from "../../devices/useOwnDevices";
 import { DiscoverySettings } from "../../discovery/DiscoverySettings";
 import SetIntegrationManager from "../../SetIntegrationManager";
+import SdkConfig from "../../../../../SdkConfig";
 
 interface IIgnoredUserProps {
     userId: string;
@@ -294,6 +296,14 @@ export default class SecurityUserSettingsTab extends React.Component<IProps, ISt
 
     public render(): React.ReactNode {
         const secureBackup = <SecureBackup />;
+        const config = SdkConfig.get();
+        const encryptionDisabledByConfig =
+            Boolean(config.force_disable_encryption) ||
+            Boolean(config.disable_encryption) ||
+            Boolean(config.disable_advanced_encryption_ui) ||
+            Boolean(config.customisations?.disable_encryption_ui);
+        const encryptionForceDisabled =
+            encryptionDisabledByConfig || shouldForceDisableEncryption(MatrixClientPeg.safeGet());
 
         const eventIndex = (
             <SettingsSubsection heading={_t("settings|security|message_search_section")}>
@@ -302,7 +312,7 @@ export default class SecurityUserSettingsTab extends React.Component<IProps, ISt
         );
 
         let warning;
-        if (!privateShouldBeEncrypted(MatrixClientPeg.safeGet())) {
+        if (!privateShouldBeEncrypted(MatrixClientPeg.safeGet()) && !encryptionForceDisabled) {
             warning = (
                 <div className="mx_SecurityUserSettingsTab_warning">
                     {_t("settings|security|e2ee_default_disabled_warning")}
@@ -357,10 +367,12 @@ export default class SecurityUserSettingsTab extends React.Component<IProps, ISt
             <SettingsTab>
                 {warning}
                 <SetIntegrationManager />
-                <SettingsSection heading={_t("settings|security|encryption_section")}>
-                    {secureBackup}
-                    {eventIndex}
-                </SettingsSection>
+                {!encryptionForceDisabled && (
+                    <SettingsSection heading={_t("settings|security|encryption_section")}>
+                        {secureBackup}
+                        {eventIndex}
+                    </SettingsSection>
+                )}
                 <SettingsSection heading={_t("common|privacy")}>
                     <DiscoverySettings />
                     {posthogSection}

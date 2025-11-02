@@ -9,6 +9,7 @@ Please see LICENSE files in the repository root for full details.
 import { type IPushRule, type IPushRules, RuleId } from "matrix-js-sdk/src/matrix";
 
 import { NotificationUtils } from "../../notifications";
+import SdkConfig from "../../SdkConfig";
 import { RoomNotifState } from "../../RoomNotifs";
 import { type NotificationSettings } from "./NotificationSettings";
 import { buildPushRuleMap } from "./PushRuleMap";
@@ -64,8 +65,17 @@ export function toNotificationSettings(
 ): NotificationSettings {
     const standardRules = buildPushRuleMap(pushRules);
     const contentRules = pushRules.global.content?.filter((rule) => !rule.rule_id.startsWith(".")) ?? [];
-    const dmRules = [standardRules.get(RuleId.DM), standardRules.get(RuleId.EncryptedDM)];
-    const roomRules = [standardRules.get(RuleId.Message), standardRules.get(RuleId.EncryptedMessage)];
+    const encryptionUiDisabled =
+        Boolean(SdkConfig.get().force_disable_encryption) ||
+        Boolean(SdkConfig.get().disable_encryption) ||
+        Boolean(SdkConfig.get().disable_advanced_encryption_ui) ||
+        Boolean(SdkConfig.get().customisations?.disable_encryption_ui);
+    const dmRules = encryptionUiDisabled
+        ? [standardRules.get(RuleId.DM)]
+        : [standardRules.get(RuleId.DM), standardRules.get(RuleId.EncryptedDM)];
+    const roomRules = encryptionUiDisabled
+        ? [standardRules.get(RuleId.Message)]
+        : [standardRules.get(RuleId.Message), standardRules.get(RuleId.EncryptedMessage)];
     return {
         globalMute: standardRules.get(RuleId.Master)?.enabled ?? false,
         defaultLevels: {

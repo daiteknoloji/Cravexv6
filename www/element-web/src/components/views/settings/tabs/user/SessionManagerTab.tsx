@@ -6,7 +6,7 @@ SPDX-License-Identifier: AGPL-3.0-only OR GPL-3.0-only OR LicenseRef-Element-Com
 Please see LICENSE files in the repository root for full details.
 */
 
-import React, { lazy, Suspense, useCallback, useContext, useEffect, useRef, useState } from "react";
+import React, { lazy, Suspense, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { type MatrixClient } from "matrix-js-sdk/src/matrix";
 import { logger } from "matrix-js-sdk/src/logger";
 
@@ -33,6 +33,7 @@ import { SettingsSection } from "../../shared/SettingsSection";
 import { getManageDeviceUrl } from "../../../../../utils/oidc/urls.ts";
 import { SDKContext } from "../../../../../contexts/SDKContext";
 import Spinner from "../../../elements/Spinner";
+import SdkConfig from "../../../../../SdkConfig";
 
 // We import `LoginWithQR` asynchronously to avoid importing the entire Rust Crypto WASM into the main bundle.
 const LoginWithQR = lazy(() => import("../../../auth/LoginWithQR"));
@@ -254,7 +255,19 @@ const SessionManagerTab: React.FC<{
               }
             : undefined;
 
-    const [signInWithQrMode, setSignInWithQrMode] = useState<Mode | null>(showMsc4108QrCode ? Mode.Show : null);
+    const encryptionUiDisabled = useMemo(() => {
+        const config = SdkConfig.get();
+        return (
+            Boolean(config.force_disable_encryption) ||
+            Boolean(config.disable_encryption) ||
+            Boolean(config.disable_advanced_encryption_ui) ||
+            Boolean(config.customisations?.disable_encryption_ui)
+        );
+    }, []);
+
+    const [signInWithQrMode, setSignInWithQrMode] = useState<Mode | null>(
+        showMsc4108QrCode && !encryptionUiDisabled ? Mode.Show : null,
+    );
 
     const onQrFinish = useCallback(() => {
         setSignInWithQrMode(null);
@@ -263,6 +276,12 @@ const SessionManagerTab: React.FC<{
     const onShowQrClicked = useCallback(() => {
         setSignInWithQrMode(Mode.Show);
     }, [setSignInWithQrMode]);
+
+    useEffect(() => {
+        if (encryptionUiDisabled && signInWithQrMode) {
+            setSignInWithQrMode(null);
+        }
+    }, [encryptionUiDisabled, signInWithQrMode]);
 
     if (signInWithQrMode) {
         return (
@@ -275,17 +294,21 @@ const SessionManagerTab: React.FC<{
     return (
         <SettingsTab>
             <SettingsSection>
-                <LoginWithQRSection
-                    onShowQr={onShowQrClicked}
-                    versions={clientVersions}
-                    oidcClientConfig={oidcClientConfig}
-                    isCrossSigningReady={isCrossSigningReady}
-                />
-                <SecurityRecommendations
-                    devices={devices}
-                    goToFilteredList={onGoToFilteredList}
-                    currentDeviceId={currentDeviceId}
-                />
+                {!encryptionUiDisabled && (
+                    <>
+                        <LoginWithQRSection
+                            onShowQr={onShowQrClicked}
+                            versions={clientVersions}
+                            oidcClientConfig={oidcClientConfig}
+                            isCrossSigningReady={isCrossSigningReady}
+                        />
+                        <SecurityRecommendations
+                            devices={devices}
+                            goToFilteredList={onGoToFilteredList}
+                            currentDeviceId={currentDeviceId}
+                        />
+                    </>
+                )}
                 <CurrentDeviceSection
                     device={currentDevice}
                     localNotificationSettings={localNotificationSettings.get(currentDeviceId)}
@@ -293,7 +316,7 @@ const SessionManagerTab: React.FC<{
                     isSigningOut={signingOutDeviceIds.includes(currentDeviceId)}
                     isLoading={isLoadingDeviceList}
                     saveDeviceName={(deviceName) => saveDeviceName(currentDeviceId, deviceName)}
-                    onVerifyCurrentDevice={onVerifyCurrentDevice}
+                    onVerifyCurrentDevice={encryptionUiDisabled ? undefined : onVerifyCurrentDevice}
                     onSignOutCurrentDevice={onSignOutCurrentDevice}
                     signOutAllOtherSessions={signOutAllOtherSessions}
                     otherSessionsCount={otherSessionsCount}
@@ -324,7 +347,9 @@ const SessionManagerTab: React.FC<{
                             onFilterChange={setFilter}
                             onDeviceExpandToggle={onDeviceExpandToggle}
                             onRequestDeviceVerification={
-                                requestDeviceVerification ? onTriggerDeviceVerification : undefined
+                                !encryptionUiDisabled && requestDeviceVerification
+                                    ? onTriggerDeviceVerification
+                                    : undefined
                             }
                             onSignOutDevices={onSignOutOtherDevices}
                             saveDeviceName={saveDeviceName}

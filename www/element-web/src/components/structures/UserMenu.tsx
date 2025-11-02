@@ -315,13 +315,22 @@ export default class UserMenu extends React.Component<IProps, IState> {
             );
         }
 
-        const linkNewDeviceButton = (
-            <IconizedContextMenuOption
-                iconClassName="mx_UserMenu_iconQr"
-                label={_t("user_menu|link_new_device")}
-                onClick={(e) => this.onSettingsOpen(e, UserTab.SessionManager, { showMsc4108QrCode: true })}
-            />
-        );
+        const config = SdkConfig.get();
+        const encryptionUiDisabled =
+            Boolean(config.force_disable_encryption) ||
+            Boolean(config.disable_encryption) ||
+            Boolean(config.disable_advanced_encryption_ui) ||
+            Boolean(config.customisations?.disable_encryption_ui);
+
+        const linkNewDeviceButton = encryptionUiDisabled
+            ? null
+            : (
+                <IconizedContextMenuOption
+                    iconClassName="mx_UserMenu_iconQr"
+                    label={_t("user_menu|link_new_device")}
+                    onClick={(e) => this.onSettingsOpen(e, UserTab.SessionManager, { showMsc4108QrCode: true })}
+                />
+            );
 
         let primaryOptionList = (
             <IconizedContextMenuOptionList>

@@ -18,6 +18,13 @@ function getDisplayUserIdentifier(
     userId: string,
     { roomId, withDisplayName }: { roomId?: string; withDisplayName?: boolean },
 ): string | null {
+    if (withDisplayName) {
+        const match = /^@([^:]+):?/.exec(userId);
+        if (match) {
+            return `@${match[1]}`;
+        }
+    }
+
     return userId;
 }
 

@@ -16,7 +16,6 @@ import VisibilityOnIcon from "@vector-im/compound-design-tokens/assets/web/icons
 import NotificationsIcon from "@vector-im/compound-design-tokens/assets/web/icons/notifications";
 import PreferencesIcon from "@vector-im/compound-design-tokens/assets/web/icons/preferences";
 import KeyboardIcon from "@vector-im/compound-design-tokens/assets/web/icons/keyboard";
-import KeyIcon from "@vector-im/compound-design-tokens/assets/web/icons/key";
 import SidebarIcon from "@vector-im/compound-design-tokens/assets/web/icons/sidebar";
 import MicOnIcon from "@vector-im/compound-design-tokens/assets/web/icons/mic-on";
 import LockIcon from "@vector-im/compound-design-tokens/assets/web/icons/lock";
@@ -28,6 +27,7 @@ import TabbedView, { Tab, useActiveTabWithDefault } from "../../structures/Tabbe
 import { _t, _td } from "../../../languageHandler";
 import AccountUserSettingsTab from "../settings/tabs/user/AccountUserSettingsTab";
 import SettingsStore from "../../../settings/SettingsStore";
+import SdkConfig from "../../../SdkConfig";
 import LabsUserSettingsTab, { showLabsFlags } from "../settings/tabs/user/LabsUserSettingsTab";
 import AppearanceUserSettingsTab from "../settings/tabs/user/AppearanceUserSettingsTab";
 import SecurityUserSettingsTab from "../settings/tabs/user/SecurityUserSettingsTab";
@@ -47,6 +47,9 @@ import { SDKContext, type SdkContextClass } from "../../../contexts/SDKContext";
 import { useSettingValue } from "../../../hooks/useSettings";
 import { NoChange, useEventEmitterAsyncState, type AsyncStateCallbackResult } from "../../../hooks/useEventEmitter";
 import { ToastContext, useActiveToast } from "../../../contexts/ToastContext";
+import KeyIcon from "@vector-im/compound-design-tokens/assets/web/icons/key";
+import { MatrixClientPeg } from "../../../MatrixClientPeg";
+import { shouldForceDisableEncryption } from "../../../utils/crypto/shouldForceDisableEncryption";
 import { EncryptionUserSettingsTab, type State } from "../settings/tabs/user/EncryptionUserSettingsTab";
 
 interface IProps {
@@ -124,6 +127,14 @@ export default function UserSettingsDialog(props: IProps): JSX.Element {
 
     const getTabs = (): NonEmptyArray<Tab<UserTab>> => {
         const tabs: Tab<UserTab>[] = [];
+        const client = MatrixClientPeg.safeGet();
+        const config = SdkConfig.get();
+        const encryptionDisabledByConfig =
+            Boolean(config.force_disable_encryption) ||
+            Boolean(config.disable_encryption) ||
+            Boolean(config.disable_advanced_encryption_ui) ||
+            Boolean(config.customisations?.disable_encryption_ui);
+        const encryptionForceDisabled = encryptionDisabledByConfig || shouldForceDisableEncryption(client);
 
         tabs.push(
             new Tab(
@@ -211,16 +222,18 @@ export default function UserSettingsDialog(props: IProps): JSX.Element {
             ),
         );
 
-        tabs.push(
-            new Tab(
-                UserTab.Encryption,
-                _td("settings|encryption|title"),
-                <KeyIcon />,
-                <EncryptionUserSettingsTab initialState={initialEncryptionState} />,
-                "UserSettingsEncryption",
-                showSetupRecoveryIndicator ? "mx_SettingsDialog_tabLabelsAlert" : undefined,
-            ),
-        );
+        if (!encryptionForceDisabled) {
+            tabs.push(
+                new Tab(
+                    UserTab.Encryption,
+                    _td("settings|encryption|title"),
+                    <KeyIcon />,
+                    <EncryptionUserSettingsTab initialState={initialEncryptionState} />,
+                    "UserSettingsEncryption",
+                    showSetupRecoveryIndicator ? "mx_SettingsDialog_tabLabelsAlert" : undefined,
+                ),
+            );
+        }
 
         if (showLabsFlags() || SettingsStore.getFeatureSettingNames().some((k) => SettingsStore.getBetaInfo(k))) {
             tabs.push(

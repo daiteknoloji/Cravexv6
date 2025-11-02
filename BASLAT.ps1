@@ -11,7 +11,7 @@ Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
 # Proje dizinine git
-$projectPath = "C:\Users\Can Cakir\Desktop\www-backup"
+$projectPath = Split-Path -Parent $PSCommandPath
 Set-Location $projectPath
 
 Write-Host "[1/4] Docker Desktop kontrol ediliyor..." -ForegroundColor Yellow

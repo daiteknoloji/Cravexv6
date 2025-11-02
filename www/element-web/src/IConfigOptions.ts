@@ -97,6 +97,14 @@ export interface IConfigOptions {
 
     show_labs_settings: boolean;
     features?: Record<string, boolean>; // <FeatureName, EnabledBool>
+    force_disable_encryption?: boolean;
+    disable_encryption?: boolean;
+    disable_advanced_encryption_ui?: boolean;
+
+    customisations?: {
+        disable_encryption_ui?: boolean;
+        [key: string]: unknown;
+    };
 
     bug_report_endpoint_url?: string; // omission disables bug reporting
     uisi_autorageshake_app?: string; // defaults to "element-auto-uisi"
